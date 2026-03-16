@@ -5,6 +5,9 @@ from api.files import FilesApi
 from api.settings import SettingsApi
 from api.ai_handler import AIApi
 
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
 debug = True
 
 class Api(FilesApi, SettingsApi, AIApi):
@@ -25,6 +28,12 @@ The selected directory: {path}"""
         
 
 
+# Window automatisch aktualisieren, wenn Dateien aktualisiert
+class ReloadHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        if event.src_path.endswith((".html", ".css", ".js", ".svg")):
+            win.evaluate_js("window.location.reload()")
+
 if __name__ == '__main__':
     api = Api()
     win = webview.create_window(
@@ -39,5 +48,9 @@ if __name__ == '__main__':
     )
 
     api.win = win
+ 
+    observer = Observer()
+    observer.schedule(ReloadHandler(), path="assets", recursive=False)
+    observer.start()
 
     webview.start(debug=debug)

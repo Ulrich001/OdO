@@ -1,9 +1,10 @@
 import os
+from pathlib import Path
 
 def calc_size(entry):
     if entry.is_dir():
         try:
-            items_in_dir = len(os.listdir(entry.path))
+            items_in_dir = len(list(Path(entry.path).iterdir()))
             return f"{items_in_dir} Items"
         except:
             return "Access denied"

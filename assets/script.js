@@ -3,6 +3,10 @@ const HEIGHT_MAX_SETTINGS = 200;
 const WIDTH_SMALL = 850;
 const WIDTH_EXPAND = 1500;
 
+let platformOffset = null;
+let scaleFactor = 1.0;
+
+
 const app = document.getElementById("app");
 const rightArea = document.getElementById("right-area");
 const sideSeparator = document.getElementById("side-separator");
@@ -41,22 +45,23 @@ function resize() {
   requestAnimationFrame(() => {
     let h;
     if (showExplorer) {
-      h = HEIGHT_FULL;
+      h = Math.round(HEIGHT_FULL / scaleFactor);
     } else {
       const inputH = document.getElementById('input-container').scrollHeight;
-      const settingsH = settingsOpen ? Math.min(settingsPanel.scrollHeight, HEIGHT_MAX_SETTINGS) : 0;
       const outputH = outputOpen ? document.getElementById('output-box').scrollHeight : 0;
-      h = inputH + settingsH + outputH + 2;
+      h = Math.round((inputH + outputH + platformOffset + 2) / scaleFactor);
     }
-    const w = showExplorer ? WIDTH_EXPAND : WIDTH_SMALL;
+    const w = Math.round((showExplorer ? WIDTH_EXPAND : WIDTH_SMALL) / scaleFactor);
     window.pywebview.api.resize(w, h);
   });
 }
 
 // ── start collapsed ──────────────────────────────────────────────
-window.addEventListener('pywebviewready', () => {
-  rightArea.classList.remove("open");
-  resize();
+window.addEventListener('pywebviewready', async () => {
+  const platform = await window.pywebview.api.get_platform();
+  scaleFactor = await window.pywebview.api.get_scale_factor();
+  platformOffset = platform === 'win32' ? 38 : 0;
+  setTimeout(() => resize(), 300);
 });
 
 // -- AI Action --------------------------------------------------------------------
@@ -65,7 +70,7 @@ window.addEventListener('pywebviewready', () => {
 // ---------------------------------------------------------------------------------
 function handleInput(input){
   output("Processing...")
-  window.pywebview.api.send_input(input, currDir, api_key);
+  window.pywebview.api.send_input(input, currDir);
 }
 
 // ── output ───────────────────────────────────────────────────────
@@ -186,9 +191,11 @@ function toggleExplorer(requestToggle) {
     showExplorer = !showExplorer;
   } else if (requestToggle) {
     if (showExplorer) { return; }
+    app.style.height = (HEIGHT_FULL + platformOffset) + "px";
     showExplorer = true;
   } else {
     if (!showExplorer) { return; }
+    app.style.height = "auto";
     showExplorer = false;
   }
 
@@ -400,13 +407,6 @@ folderSelect.addEventListener('click', async () => {
     historyAddPath(currDir);
   }
 });
-
-// ── settings ─────────────────────────────────────────────────────
-settingsBtn.addEventListener('click', () => {
-  // TODO: show settings panel
-  resize();
-});
-
 
 
 

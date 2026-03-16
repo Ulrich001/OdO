@@ -118,7 +118,7 @@ class TestingChanges:
                 temp_dir_path.mkdir(exist_ok=True)
 
                 # write absolute original path into .odotempdir file
-                (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"{original_dir_path}\n{self.track_files_count}")
+                (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"{original_dir_path}\n{self.track_files_count}", encoding="utf-8")
                 self.track_files_count += 1
 
                 self.track_files.add_file(original_dir_path, is_dir=True)
@@ -128,7 +128,7 @@ class TestingChanges:
                 temp_file_path = target_dir / file
 
                 # write absolute original path into the file
-                temp_file_path.write_text(f"{original_file_path}\n{self.track_files_count}")
+                temp_file_path.write_text(f"{original_file_path}\n{self.track_files_count}", encoding="utf-8")
                 self.track_files_count += 1
 
                 self.track_files.add_file(original_file_path)
@@ -153,7 +153,7 @@ class TestingChanges:
                 if not odotempdir_files:
                     # no .odotempdir means this dir was newly created
                     self.track_files.add_file(temp_dir_path, is_new=True, is_dir=True)
-                    (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"\n{self.track_files_count}")
+                    (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"\n{self.track_files_count}", encoding="utf-8")
                     self.track_files_count += 1
                 else:
                     with open(odotempdir_files[0]) as dir:

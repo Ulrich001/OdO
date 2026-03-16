@@ -3,13 +3,14 @@ from google import genai
 import subprocess
 import os
 import json
+import sys
 
 from api.test_changes import TestingChanges
 
 
-INSTR_FIRST_CALL = (Path(__file__).parent / "ai_instructions" / "first_call.txt").read_text()
+INSTR_FIRST_CALL = (Path(__file__).parent / "ai_instructions" / "first_call.txt").read_text(encoding="utf-8")
 
-GEMINI_API_KEY = "AIzaSyDACazxa3v8O38Fx8cL5NaMVo-qH6uTQ-w"
+GEMINI_API_KEY = "AIzaSyCY5AUYi2a1dD_Q51Znl27KMEGqHHoPd48"
 os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 MODEL = "gemini-3-flash-preview"
 
@@ -61,7 +62,7 @@ class AIApi:
         self.chat = self.client.chats.create(model=MODEL)
         self.is_new_session = True
 
-    def send_input(self, user_input, path, api_key, debug_output = False):
+    def send_input(self, user_input, path, debug_output = False):
         #TODO Add API Key functionality
         
         self.block_commands = ""
@@ -111,8 +112,15 @@ class AIApi:
 
         self.test_script_path = Path(__file__).parent.parent / "scripts" / "temp_script.py"
         self.test_script_path.parent.mkdir(parents=True, exist_ok=True)
-        self.test_script_path.write_text(self.block_python)
-        result = subprocess.run(["python3", str(self.test_script_path)], capture_output=True, text=True, cwd=test_dir)
+        self.test_script_path.write_text(self.block_python, encoding="utf-8")
+
+        result = subprocess.run(
+            [sys.executable, str(self.test_script_path)],
+            capture_output=True,
+            text=True,
+            cwd=str(test_dir),
+            encoding="utf-8"
+        )
 
         if len(result.stderr):
             self.execute_error = result.stderr
@@ -125,7 +133,13 @@ class AIApi:
         self.send_input(f"The changes made by your script were rejected by the user: {input}", self.path)
 
     def accept_changes(self):
-        subprocess.run(["python3", str(self.test_script_path)], capture_output=True, text=True, cwd=self.path)
+        subprocess.run(
+            [sys.executable, str(self.test_script_path)],
+            capture_output=True,
+            text=True,
+            cwd=str(self.path),
+            encoding="utf-8"
+        )
 
     def get_overview_changes(self):
         return self.tester.compare_dirs()
