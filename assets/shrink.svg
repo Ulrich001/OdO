@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="0.98768896mm"
+   height="0.98768997mm"
+   viewBox="0 0 0.98768896 0.98768997"
+   version="1.1"
+   id="svg1053"
+   sodipodi:docname="shrink.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     showgrid="false" />
+  <defs
+     id="defs1050" />
+  <g
+     id="layer1"
+     transform="translate(-104.34718,-98.029278)"
+     style="stroke:#ffffff;stroke-opacity:1"
+     inkscape:export-filename="shrink.svg"
+     inkscape:export-xdpi="96"
+     inkscape:export-ydpi="96">
+    <path
+       d="m 105.23625,98.621899 v 0.138276 c 0,0.05532 0,0.08298 -0.0108,0.104103 -0.009,0.01858 -0.0246,0.03369 -0.0432,0.04316 -0.0211,0.01077 -0.0488,0.01077 -0.1041,0.01077 h -0.13827 m -0.19754,-0.790152 h -0.13828 c -0.0553,0 -0.083,0 -0.1041,0.01076 -0.0186,0.0095 -0.0337,0.02458 -0.0432,0.04316 -0.0108,0.02113 -0.0108,0.04879 -0.0108,0.104102 v 0.138277 m -0.0494,0.543229 0.2963,-0.296307 m 0,0 h -0.2963 m 0.2963,0 v 0.296307 m 0.59262,-0.888921 -0.29631,0.296307 m 0,0 h 0.29631 m -0.29631,0 v -0.296307"
+       stroke="#000000"
+       stroke-width="0.098769"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path2"
+       style="fill:none;stroke:#ffffff;stroke-opacity:1" />
+  </g>
+</svg>

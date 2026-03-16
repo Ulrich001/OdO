@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>OdO</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="left-area">
+      <div id="output-box">
+        <div id="output-header">
+          <h4>OdO</h4>
+          <button id="reset-session-btn">Reset Session</button>
+        </div>
+        <div id="output-content"></div>
+      </div>
+
+      <div id="settings-panel">
+        <div id="settings-header">
+          <span>Settings</span>
+          <button id="settings-close-btn">✕</button>
+        </div>
+        <div id="settings-body">
+          <!-- your settings here -->
+          <div class="settings-row">
+            <label>API Key</label>
+            <input type="password" id="settings-api-key" placeholder="sk-..."/>
+          </div>
+        </div>
+      </div>
+
+      <div id="input-container">
+        <div id="accept-bar">
+          <span id="accept-question">Accept changes?</span>
+          <button id="accept-btn">✓ Accept</button>
+        </div>
+        <div id="top-bar">
+          <div id="folder-select">
+            <span id="folder-icon"><img src="Folder.svg" alt="📁"></span>
+            <span id="folder-path">[Select a Directory]</span>
+          </div>
+          <button id="settings-btn">···</button>
+          <button id="expand-btn"><img id="expand-btn-icon" src="expand.svg" width=20 height=20 alt="⌞ ⌝"></button>
+        </div>
+        <div id="input-bar">
+          <textarea id="chat-input" rows="1" placeholder="Ask OdO..."></textarea>
+          <button id="send-btn"><img src="ArrowUp.svg" alt="↑"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="side-separator"></div>
+    <div id="right-area">
+      <div id="explorer">
+        <div id="nav-bar">
+          <div id="nav-row-1">
+            <div id="navigation-buttons">
+              <button id="history-back-btn" class="navigation-btn"><img src="ArrowUp.svg" style="transform: rotate(-90deg)" alt="←"></button>
+              <button id="history-up-btn" class="navigation-btn"><img src="ArrowUp.svg" alt="↑"></button>
+              <button id="history-forward-btn" class="navigation-btn"><img src="ArrowUp.svg" style="transform: rotate(90deg)" alt="→"></button>
+            </div>
+            <span id="current-path">/</span>
+          </div>
+          <div id="toggle-test-view-buttons">
+            <button id="toggle-test-view-before" class="toggle-test-view active">Before</button>
+            <button id="toggle-test-view-compare" class="toggle-test-view">Compare</button>
+            <button id="toggle-test-view-after" class="toggle-test-view">After</button>
+          </div>
+        </div>
+        <div id="file-list"></div>
+      </div>
+      <div id="explorer-separator"></div>
+      <div id="sidebar">
+        <h3 id="sb-header">Details</h3>
+        <p id="sb-name">filename.txt</p>
+        <table id="sb-table">
+          <tr>
+            <td class="sb-key">Size</td>
+            <td class="sb-val" id="sb-size"></td>
+          </tr>
+          <tr>
+            <td class="sb-key">Modified</td>
+            <td class="sb-val" id="sb-modified"></td>
+          </tr>
+          <tr>
+            <td class="sb-key">Type</td>
+            <td class="sb-val" id="sb-type"></td>
+          </tr>
+          <tr>
+            <td class="sb-key">Path</td>
+            <td class="sb-val" id="sb-path"></td>
+          </tr>
+        </table>
+        <div id="file-preview"></div>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
