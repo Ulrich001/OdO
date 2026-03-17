@@ -1,4 +1,4 @@
-import os
+import subprocess, os, platform
 from pathlib import Path
 import webview
 
@@ -42,7 +42,6 @@ class FilesApi:
     
     def get_parent(self, path):
         return str(Path(path).parent)
-    
 
     def get_image_preview(self, path):
         import base64
@@ -61,3 +60,22 @@ class FilesApi:
             "avif": "image/avif",
         }.get(ext, f"image/{ext}")
         return f"data:{mime};base64,{data}"
+    
+    def path_exists(path):
+        path = Path(path)
+
+        return path.exists
+
+
+    def get_file_content(self, path):
+        file = Path(path)
+
+        return file.read_text(encoding='utf-8') if file.exists else "File could not be accessed"
+    
+    def open_default_app(self, filepath):
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', filepath))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(filepath)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', filepath))

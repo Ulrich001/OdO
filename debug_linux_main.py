@@ -8,7 +8,7 @@ from api.ai_handler import AIApi
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-debug = True
+debug = False
 
 class Api(FilesApi, SettingsApi, AIApi):
     def __init__(self):
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         'assets/index.html',
         js_api=api,
         min_size=(400, 60),
-        frameless=True if not debug else False,
+        frameless=False,
         transparent=True,
         background_color="#000000",
         easy_drag=False,

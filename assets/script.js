@@ -1,62 +1,62 @@
+// Fenstergrößen
 const HEIGHT_FULL = 840;
 const HEIGHT_MAX_SETTINGS = 200;
 const WIDTH_SMALL = 850;
 const WIDTH_EXPAND = 1500;
 
+// Einstellungen für Fenster bei Windows
 let platformOffset = null;
 let scaleFactor = 1.0;
 
 
-const app = document.getElementById("app");
-const rightArea = document.getElementById("right-area");
-const sideSeparator = document.getElementById("side-separator");
-const outputBox = document.getElementById('output-box');
-const outputContent = document.getElementById("output-content");
-const sendBtn = document.getElementById('send-btn');
-const chatInput = document.getElementById('chat-input');
-const folderSelect = document.getElementById('folder-select');
-const settingsBtn = document.getElementById('settings-btn');
-const expandBtn = document.getElementById("expand-btn");
-const expandBtnIcon = document.getElementById("expand-btn-icon");
+const app             = document.getElementById("app");
+const rightArea       = document.getElementById("right-area");
+const sideSeparator   = document.getElementById("side-separator");
+const outputBox       = document.getElementById('output-box');
+const outputContent   = document.getElementById("output-content");
+const sendBtn         = document.getElementById('send-btn');
+const chatInput       = document.getElementById('chat-input');
+const folderSelect    = document.getElementById('folder-select');
+const settingsBtn     = document.getElementById('settings-btn');
+const expandBtn       = document.getElementById("expand-btn");
+const expandBtnIcon   = document.getElementById("expand-btn-icon");
 const resetSessionBtn = document.getElementById("reset-session-btn");
-const fileList = document.getElementById("file-list");
-const sidebar = document.getElementById("sidebar");
-const folderPath = document.getElementById("folder-path");
-const acceptBar = document.getElementById('accept-bar');
-const acceptBtn = document.getElementById('accept-btn');
-const settingsPanel = document.getElementById('settings-panel');
+const fileList        = document.getElementById("file-list");
+const sidebar         = document.getElementById("sidebar");
+const folderPath      = document.getElementById("folder-path");
+const acceptBar       = document.getElementById('accept-bar');
+const acceptBtn       = document.getElementById('accept-btn');
+const settingsPanel   = document.getElementById('settings-panel');
 
 let outputOpen = false;
 let settingsOpen = false;
-let showExplorer = false;
+let explorerOpen = false;
+
 let currDir = "/";
-let testing = false;
 let pathHistory = ["/"];
 let pathHistoryIndex = 0;
 let activeEntry = null;
-let testPreview = "compare";
+let activeEntryData = null;
+
 let testDirAfter = null;
 let testDirBefore = null;
+let testing = false;
+let testPreview = "compare";
 
-let api_key = "AIzaSyDACazxa3v8O38Fx8cL5NaMVo-qH6uTQ-w";
+// Einstellungen
+let api_key = "";
 
-// ── resize helper ────────────────────────────────────────────────
-function resize() {
-  requestAnimationFrame(() => {
-    let h;
-    if (showExplorer) {
-      h = Math.round(HEIGHT_FULL / scaleFactor);
-    } else {
-      const inputH = document.getElementById('input-container').scrollHeight;
-      const outputH = outputOpen ? document.getElementById('output-box').scrollHeight : 0;
-      h = Math.round((inputH + outputH + platformOffset + 2) / scaleFactor);
-    }
-    const w = Math.round((showExplorer ? WIDTH_EXPAND : WIDTH_SMALL) / scaleFactor);
-    window.pywebview.api.resize(w, h);
-  });
-}
 
-// ── start collapsed ──────────────────────────────────────────────
+// Kontrolliiert, welche Dateien Preview haben
+const imgExtensions = [".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".gif", ".webp", ".apng", ".svg", ".avif"]
+const textExtensions = [".txt", ".md", ".py", ".js", ".ts", ".html", ".css", ".json", ".yaml", ".yml", ".toml", ".rs", ".go", ".cpp", ".c", ".h", ".sh", ".xml", ".csv", ".log"]
+
+
+
+
+// Helpers
+
+// Wird be Start gecalled --> passt Fenstergröße und platfromOffset an
 window.addEventListener('pywebviewready', async () => {
   const platform = await window.pywebview.api.get_platform();
   scaleFactor = await window.pywebview.api.get_scale_factor();
@@ -64,19 +64,125 @@ window.addEventListener('pywebviewready', async () => {
   setTimeout(() => resize(), 300);
 });
 
-// -- AI Action --------------------------------------------------------------------
+// Passt Fenstergröße an
+function resize() {
+  requestAnimationFrame(() => {
+    let h;
+    if (explorerOpen) {
+      h = Math.round(HEIGHT_FULL / scaleFactor);
+    } else {
+      const inputH = document.getElementById('input-container').scrollHeight;
+      const outputH = outputOpen ? document.getElementById('output-box').scrollHeight : 0;
+      h = Math.round((inputH + outputH + platformOffset + 2) / scaleFactor);
+    }
+    const w = Math.round((explorerOpen ? WIDTH_EXPAND : WIDTH_SMALL) / scaleFactor);
+    window.pywebview.api.resize(w, h);
+  });
+}
+
+//
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, chatInput.lineHeight * 5) + 'px';
+  resize();
+});
+chatInput.lineHeight = parseFloat(window.getComputedStyle(chatInput).lineHeight);
+
+
+
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
+// Input
 // ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+
 function handleInput(input){
-  output("Processing...")
+  output("Wird verarbeitet...")
   window.pywebview.api.send_input(input, currDir);
 }
 
-// ── output ───────────────────────────────────────────────────────
+// -- Reset Session
+resetSessionBtn.addEventListener("click", () => {
+  toggleOutput();
+});
+
+// ── send ─────────────────────────────────────────────────────────
+sendBtn.addEventListener('click', () => {
+  const val = chatInput.value.trim();
+  if (!val || !currDir) return;
+  if (testing) {
+    window.pywebview.api.reject_changes(val);
+    endTest();
+    return;
+  }
+  handleInput(val);
+  toggleOutput(true);
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+});
+chatInput.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+// ── folder select ─────────────────────────────────────────────────
+folderSelect.addEventListener('click', async () => {
+  currDir = await window.pywebview.api.select_directory();
+  if (currDir != null) {
+    historyAddPath(currDir);
+  }
+});
+
+
+
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+// Output
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+
 function output(output) {
   outputContent.innerHTML = output;
 }
+
+
+// ── toggle output panel ──────────────────────────────────────────
+function toggleOutput() {
+  outputOpen = !outputOpen;
+
+  if (!outputOpen) {
+    outputBox.classList.remove('visible');
+  } else {
+    outputBox.classList.add('visible');
+  }
+
+  resize();
+}
+
+
+
+// Output styling
+document.addEventListener('click', async e => {
+  if (e.target.classList.contains('file-ref')) {
+    const fullPath = e.target.title;
+    dir = await window.pywebview.api.get_parent(fullPath);
+    historyAddPath(dir);
+  }
+});
+
+
+
+
+
+
+
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+// Test
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
 
 function startTest(temp){
   testing = true;
@@ -87,6 +193,10 @@ function startTest(temp){
   toggleExplorer(true);
 
   document.getElementById('toggle-test-view-buttons').style.display = 'flex';
+  // Richtiges highlight der Compare Buttons 
+  document.querySelectorAll('.toggle-test-view').forEach(b => b.classList.remove('active'));
+  document.getElementById("toggle-test-view-compare").classList.add("acitve");
+
   acceptBar.classList.add('visible');
   sendBtn.classList.add('reject-mode');
   chatInput.placeholder = "Give feedback to reject...";
@@ -94,6 +204,49 @@ function startTest(temp){
   clearHistory(testDirAfter);
   loadDir(testDirAfter);
 }
+
+document.querySelectorAll('.toggle-test-view').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.toggle-test-view').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (btn.id === 'toggle-test-view-before') {
+      if (testPreview == "after") {
+        testPreview = "before";
+        new_path = window.pywebview.api.original_dir(currDir);
+
+        if (new_path == "") {
+          new_path = testDirBefore;
+        }
+
+        loadDir(new_path);
+      } else if (testPreview == "compare") {
+        //TODO Nach ursprünglichem Dir suchen
+        testPreview = "before";
+        loadDir(testDirBefore)
+      }
+      testPreview = 'before';
+      loadDir(testDirBefore);
+    } else if (btn.id === 'toggle-test-view-after') {
+      if (testPreview == "compare") {
+        testPreview = "after";
+        loadDir(currDir);
+      } else if (testPreview == "before") {
+        testPreview = "after";
+        loadDir(testDirAfter);
+      }
+    } else {
+      if (testPreview == "after") {
+        testPreview = "compare";
+        loadDir(currDir);
+      } else if (testPreview == "before") {
+        //TODO Nach neuem Dir suchen
+        testPreview = "compare";
+        loadDir(testDirAfter);
+      }
+    }
+  });
+});
 
 function endTest() {
   testing = false;
@@ -103,14 +256,43 @@ function endTest() {
   document.getElementById('toggle-test-view-buttons').style.display = 'none';
 
   clearHistory();
+  updatedPath(currDir);
   historyAddPath(currDir);
   resize();
 }
 
-// ---------------------------------------------------------------------------------
+
+// Accept/Reject
+acceptBtn.addEventListener('click', () => {
+  window.pywebview.api.accept_changes();
+  endTest();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 // Settings
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
 
 
 settingsBtn.addEventListener('click', () => {
@@ -135,51 +317,12 @@ document.getElementById('settings-close-btn').addEventListener('click', () => {
 
 
 
-acceptBtn.addEventListener('click', () => {
-  // TODO: call python to apply changes
-  window.pywebview.api.accept_changes();
-  endTest();
-});
 
-
-document.querySelectorAll('.toggle-test-view').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.toggle-test-view').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    if (btn.id === 'toggle-test-view-before') {
-      testPreview = 'before';
-      loadDir(testDirBefore);
-    } else if (btn.id === 'toggle-test-view-after') {
-      testPreview = 'after';
-      loadDir(testDirAfter);
-    } else {
-      testPreview = 'compare';
-      loadDir(testDirAfter);
-    }
-  });
-});
-
-// ── toggle output panel ──────────────────────────────────────────
-function toggleOutput() {
-  outputOpen = !outputOpen;
-
-  if (!outputOpen) {
-    outputBox.classList.remove('visible');
-  } else {
-    outputBox.classList.add('visible');
-  }
-
-  resize();
-}
-
-// ── auto-grow textarea ───────────────────────────────────────────
-chatInput.addEventListener('input', () => {
-  chatInput.style.height = 'auto';
-  chatInput.style.height = Math.min(chatInput.scrollHeight, chatInput.lineHeight * 7) + 'px';
-  resize();
-});
-chatInput.lineHeight = parseFloat(window.getComputedStyle(chatInput).lineHeight);
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+// Explorer
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
 
 // ── expand window ─────────────────────────────────────────────────
 expandBtn.addEventListener("click", () => {
@@ -188,18 +331,18 @@ expandBtn.addEventListener("click", () => {
 
 function toggleExplorer(requestToggle) {
   if (requestToggle == undefined) {
-    showExplorer = !showExplorer;
+    explorerOpen = !explorerOpen;
   } else if (requestToggle) {
-    if (showExplorer) { return; }
+    if (explorerOpen) { return; }
     app.style.height = (HEIGHT_FULL + platformOffset) + "px";
-    showExplorer = true;
+    explorerOpen = true;
   } else {
-    if (!showExplorer) { return; }
+    if (!explorerOpen) { return; }
     app.style.height = "auto";
-    showExplorer = false;
+    explorerOpen = false;
   }
 
-  if (showExplorer) {
+  if (explorerOpen) {
     rightArea.classList.add('open');
     sideSeparator.classList.add('visible');
     outputBox.classList.add('visible');
@@ -215,7 +358,7 @@ function toggleExplorer(requestToggle) {
     app.style.height = "auto";
   }
 
-  expandBtnIcon.src = showExplorer ? "shrink.svg" : "expand.svg";
+  expandBtnIcon.src = explorerOpen ? "shrink.svg" : "expand.svg";
 
   resize();
 }
@@ -255,7 +398,7 @@ function addEntry(entry) {
 
   // Informationen in Sidebar anzeigen
   div.addEventListener("click", () => {
-    setActive(div);
+    setActive(div, entry);
     showSidebar(entry);
   });
 
@@ -283,7 +426,7 @@ function addEntryCompare(entry) {
   `;
   
   div.addEventListener("click", () => {
-    setActive(div);
+    setActive(div, entry);
     showSidebar(entry);
   });
 
@@ -294,11 +437,57 @@ function addEntryCompare(entry) {
   fileList.appendChild(div);
 }
 
-function setActive(path) {
+// Highlight für ausgewählte Datei
+function setActive(div, entry) {
   if (activeEntry) activeEntry.classList.remove("active");
-  activeEntry = path;
+  activeEntry = div;
   activeEntry.classList.add("active");
+  activeEntryData = entry;  // ← store entry data
 }
+
+async function showSidebar(entry) {
+  document.getElementById('sb-name').textContent = entry.name;
+  document.getElementById('sb-size').textContent = entry.size ?? '—';
+  document.getElementById('sb-modified').textContent = entry.modified ? new Date(entry.modified * 1000).toLocaleDateString() : '—';
+  document.getElementById('sb-type').textContent = entry.extension ?? entry.original_path?.split('.').pop() ?? '—';
+  document.getElementById('sb-path').textContent = entry.path;
+  document.getElementById('sidebar').style.display = 'block';
+
+  const filePreview = document.getElementById("file-preview");
+  filePreview.innerHTML = "";
+  filePreview.style.display = "none";
+
+  if (imgExtensions.includes(entry.extension)) {
+    const img = document.createElement("img");
+
+    img.id="file-preview";
+    img.className = "file-preview-img"
+
+    // img.src = entry.path funktioniert nicht, daher Umweg über Python:
+    img.src = await window.pywebview.api.get_image_preview(entry.path);
+
+    filePreview.appendChild(img);
+    filePreview.style.display = "block";
+  } else if (textExtensions.includes(entry.extension)) {
+    const file = document.createElement("file_content");
+
+    file.id="file-preview";
+    file.className = "file-preview-text";
+    
+    file.textContent = await window.pywebview.api.get_file_content(entry.path);
+
+
+    filePreview.appendChild(file);
+    filePreview.style.display = "block";
+  }
+}
+
+document.getElementById("file-open").addEventListener("click", () => {
+  window.pywebview.api.open_default_app(activeEntryData.path);
+})
+
+
+
 
 // --- History
 function historyAddPath(path) {
@@ -321,7 +510,7 @@ function clearHistory(path) {
 
 async function updatedPath(){
   currDir = pathHistory[pathHistoryIndex]; 
-  if (showExplorer) {loadDir(currDir);}
+  if (explorerOpen) {loadDir(currDir);}
   folderPath.textContent = currDir;
   document.getElementById("current-path").innerHTML = currDir;
 }
@@ -344,79 +533,5 @@ document.getElementById("history-forward-btn").addEventListener("click", async (
   if (pathHistoryIndex < pathHistory.length - 1) {
     pathHistoryIndex++;
     updatedPath();
-  }
-});
-
-async function showSidebar(entry) {
-  document.getElementById('sb-name').textContent = entry.name;
-  document.getElementById('sb-size').textContent = entry.size ?? '—';
-  document.getElementById('sb-modified').textContent = entry.modified ? new Date(entry.modified * 1000).toLocaleDateString() : '—';
-  document.getElementById('sb-type').textContent = entry.extension ?? entry.original_path?.split('.').pop() ?? '—';
-  document.getElementById('sb-path').textContent = entry.path;
-  document.getElementById('sidebar').style.display = 'block';
-
-  const filePreview = document.getElementById("file-preview");
-  filePreview.innerHTML = "";
-  filePreview.style.display = "none";
-
-  const imgExtensions = [".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".gif", ".webp", ".apng", ".svg", ".avif"]
-
-  if (imgExtensions.includes(entry.extension)) {
-    const img = document.createElement("img");
-
-    img.id="file-preview";
-
-    // img.src = entry.path funktioniert nicht, daher Umweg über Python:
-    img.src = await window.pywebview.api.get_image_preview(entry.path);
-
-    filePreview.appendChild(img);
-    filePreview.style.display = "block";
-  }
-}
-
-// ── send ─────────────────────────────────────────────────────────
-sendBtn.addEventListener('click', () => {
-  const val = chatInput.value.trim();
-  if (!val || !currDir) return;
-  if (testing) {
-    window.pywebview.api.reject_changes(val);
-    endTest();
-    return;
-  }
-  handleInput(val);
-  toggleOutput(true);
-  chatInput.value = '';
-  chatInput.style.height = 'auto';
-});
-chatInput.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.key === 'Enter') {
-    e.preventDefault();
-    sendBtn.click();
-  }
-});
-
-// -- Reset Session
-resetSessionBtn.addEventListener("click", () => {
-  toggleOutput();
-});
-
-// ── folder select ─────────────────────────────────────────────────
-folderSelect.addEventListener('click', async () => {
-  currDir = await window.pywebview.api.select_directory();
-  if (currDir != null) {
-    historyAddPath(currDir);
-  }
-});
-
-
-
-
-
-// -- Text styling
-document.addEventListener('click', async e => {
-  if (e.target.classList.contains('file-ref')) {
-    const fullPath = e.target.title;
-    dir = await window.pywebview.api.get_parent(fullPath);
-    historyAddPath(dir);
   }
 });

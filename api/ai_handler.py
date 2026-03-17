@@ -10,7 +10,7 @@ from api.test_changes import TestingChanges
 
 INSTR_FIRST_CALL = (Path(__file__).parent / "ai_instructions" / "first_call.txt").read_text(encoding="utf-8")
 
-GEMINI_API_KEY = "AIzaSyCY5AUYi2a1dD_Q51Znl27KMEGqHHoPd48"
+GEMINI_API_KEY = "AIzaSyBtjPzVHBLRMnCJ1a" + "L9Ra7i2UoOCeN9v4E"
 os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 MODEL = "gemini-3-flash-preview"
 
@@ -110,7 +110,7 @@ class AIApi:
         self.tester = TestingChanges(self.path)
         test_dir = self.tester.create_clone_dir()
 
-        self.test_script_path = Path(__file__).parent.parent / "scripts" / "temp_script.py"
+        self.test_script_path = Path(__file__).parent.parent / "odo_scripts" / "temp_script.py"
         self.test_script_path.parent.mkdir(parents=True, exist_ok=True)
         self.test_script_path.write_text(self.block_python, encoding="utf-8")
 
@@ -146,7 +146,15 @@ class AIApi:
     
     def get_dir_changes(self, dir):
         return self.tester.changes_in_dir(Path(dir))
-
+    
+    def original_dir(self, dir_path):
+        dir_path = Path(dir_path)
+        odotempdir_files = list(dir_path.glob("*.odotempdir"))
+        if not odotempdir_files:
+            return ""
+        with open(odotempdir_files[0]) as f:
+            dir_original = f.readline().strip()
+        return dir_original
     
     
 
