@@ -96,6 +96,9 @@ html, body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.file-entry.selected {
+  background-color: rgba(255,255,255,0.08);
+}
 
 #nav-bar {
   display: flex;
@@ -564,7 +567,7 @@ html, body {
   background: rgba(255,255,255,0.05);
   border: 1.25px solid rgba(255,255,255,0.08);
   border-radius: 10px;
-  line-height: 1.5;        /* was 2 */
+  line-height: 1.25;
   white-space: pre-wrap;
   margin-top: 5px;
   padding: 7px 10px;
@@ -573,8 +576,11 @@ html, body {
 #output-content ul, #output-content ol {
   padding-left: 20px;
 }
+#output-content ul {
+  margin: 4px 0;
+}
 #output-content li {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .file-ref {

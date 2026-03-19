@@ -10,22 +10,26 @@ from api.test_changes import TestingChanges
 
 INSTR_FIRST_CALL = (Path(__file__).parent / "ai_instructions" / "first_call.txt").read_text(encoding="utf-8")
 
-GEMINI_API_KEY = "AIzaSyBtjPzVHBLRMnCJ1a" + "L9Ra7i2UoOCeN9v4E"
+GEMINI_API_KEY = "AIzaSyD69UoimCi0SVojPMDjvGBv1XDXTdSvKWM"
 os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
-MODEL = "gemini-3-flash-preview"
+MODEL = "gemini-3.1-flash-lite-preview"
 
 
 def get_block_content(text, block_name):
     """Gibt den Inhalt eines Blockes in der KI-Ausgabe"""
-    block_start = text.find(f"```{block_name}") + len(block_name) + 3
+    block_start = text.find(f"```{block_name}") 
 
     # Abbrechen, wenn Block nicht gefunden
     if block_start == -1:
-        return None
+        return ""
+    
+    block_start += len(block_name) + 3
     
     block_end = text.find("```", block_start)
 
     block_content = text[block_start: block_end]
+
+    print(f"START: {block_start}, END: {block_end}, {block_name}, {block_content}")
 
     return block_content
 
@@ -68,14 +72,13 @@ class AIApi:
         self.block_commands = ""
         self.block_output = ""
         self.block_python = ""
+        input = user_input + "USER INPUT:\n"
         
         self.path = path
 
         if self.is_new_session:
-            input = INSTR_FIRST_CALL + user_input
+            input = INSTR_FIRST_CALL + "\n\n" + input + "\n\nDIRECTORY:\n" + get_dir_content(path)
             self.is_new_session = False
-
-        input += "Directory: " + get_dir_content(path)
 
 
         print(input)
@@ -91,10 +94,10 @@ class AIApi:
         self.process_output()
 
         self.win.evaluate_js(f"output({json.dumps(self.block_output)})")
-
-        if self.block_python:
+        
+        if self.block_python != "":
             temp_dir = self.test_script()
-            self.win.evaluate_js(f"startTest({json.dumps(str(temp_dir))})")
+            self.win.evaluate_js(f"test.start({json.dumps(str(temp_dir))})")
 
         self.execute_error = []
 
@@ -102,9 +105,6 @@ class AIApi:
         self.block_python = get_block_content(self.output, "python")
         self.block_commands = get_block_content(self.output, "commands")
         self.block_output = get_block_content(self.output, "output")
-
-        if self.block_python:
-            self.test_script()
     
     def test_script(self):
         self.tester = TestingChanges(self.path)

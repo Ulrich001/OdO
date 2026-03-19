@@ -8,7 +8,6 @@ from api.ai_handler import AIApi
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-debug = False
 
 class Api(FilesApi, SettingsApi, AIApi):
     def __init__(self):
@@ -40,7 +39,7 @@ if __name__ == '__main__':
         "OdO",
         'assets/index.html',
         js_api=api,
-        min_size=(400, 60),
+        min_size=(850, 80),
         frameless=False,
         transparent=True,
         background_color="#000000",
@@ -53,4 +52,4 @@ if __name__ == '__main__':
     observer.schedule(ReloadHandler(), path="assets", recursive=False)
     observer.start()
 
-    webview.start(debug=debug)
+    webview.start(debug=True)

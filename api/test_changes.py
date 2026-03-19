@@ -182,7 +182,6 @@ class TestingChanges:
     
     def changes_in_dir(self, dir_after):
         dir_after = Path(dir_after)
-        print(dir_after)
 
         if dir_after != self.TEMP_DIR:
             # get original path of this dir from .odotempdir

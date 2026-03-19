@@ -31,9 +31,9 @@ class FilesApi:
 
         return entries
     
-    def select_directory(self):
+    def select_directory(self, directory=None):
         result = self.win.create_file_dialog(
-            webview.FileDialog.FOLDER, directory=self.path if self.path != None else "", allow_multiple=True
+            webview.FileDialog.FOLDER, directory=directory or self.path or "", allow_multiple=True
         )
         if result and result[0] is not None:
             path = result[0]
