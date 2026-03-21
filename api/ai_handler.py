@@ -67,6 +67,8 @@ class AIApi:
             self.new_session()
         self.info_input = ""
 
+        self.is_new_session = True
+
     def new_client(self):
         self.client = genai.Client()
         self.new_session()
