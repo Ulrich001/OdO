@@ -21,10 +21,12 @@ class Test {
 
         this.testButtons.style.display = "flex";
         document.querySelectorAll(".toggle-test-view").forEach(b => b.classList.remove("acitve"));
+        folderSelect.classList.add("disabled");
+        settingsBtn.disabled = true;
 
         this.acceptBar.classList.add("visible");
-        sendBtn.classList.add("reject-mode");
-        chatInput.placeholder = "Schlage Änderungen vor..."
+        sendBtn.classList.add("test");
+        chatInput.placeholder = "Describe any changes to this result..."
 
         this.viewCompare();
         explorer.open()
@@ -34,11 +36,15 @@ class Test {
         this.isTesting = false;
 
         this.acceptBar.classList.remove("visible");
-        sendBtn.classList.remove("reject-mode");
+        sendBtn.classList.remove("test");
+        folderSelect.classList.remove("disabled");
+        settingsBtn.disabled = false;
+
         chatInput.placeholder = "Ask OdO...";
         this.testButtons.style.display = "none";
 
-        explorer.load();
+        sidebar.hide();
+        explorer.load(this.baseOriginal);
         history.clear(explorer.currentDir);
         resize();
     }

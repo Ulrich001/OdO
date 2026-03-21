@@ -8,13 +8,20 @@
 <body>
   <div id="app">
     <div id="left-area">
-
+      
       <div id="output-box">
+        <div id="output-content"></div>
+      </div>
+      
+      <div id="chat-history">
         <div id="output-header">
           <h4>OdO</h4>
           <button id="reset-session-btn">Reset Session</button>
         </div>
-        <div id="output-content"></div>
+        <div class="chat-placeholder">
+          <span class="chat-placeholder-title">OdO</span>
+          <span class="chat-placeholder-sub">Select a folder and start a conversation</span>
+        </div>
       </div>
 
       <div id="settings-panel">
@@ -23,17 +30,36 @@
           <button id="settings-close-btn">✕</button>
         </div>
         <div id="settings-body">
-          <!-- settings here -->
           <div class="settings-row">
             <label>API Key</label>
-            <input type="password" id="settings-api-key" placeholder="sk-..."/>
-          </div>
+            <div class="api-key-wrapper">
+                <svg class="api-key-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                <input type="password" id="settings-api-key" placeholder="Gemini API Key"/>
+            </div>
         </div>
+          <div class="settings-row">
+              <label>Model</label>
+              <div class="model-select" id="model-select">
+                  <div class="model-option" data-value="gemini-3-flash-preview">
+                      <span class="model-name">Gemini 3 Flash</span>
+                      <span class="model-desc">More powerful, perfect for more complex tasks, 20 Messages/Day</span>
+                  </div>
+                  <div class="model-option selected" data-value="gemini-3.1-flash-lite-preview">
+                      <span class="model-name">Gemini 3.1 Flash Lite</span>
+                      <span class="model-desc">Very fast, 500 Messages/Day</span>
+                  </div>
+              </div>
+          </div>
+      </div>
       </div>
 
       <div id="input-container">
         <div id="accept-bar">
-          <span id="accept-question">Accept changes?</span>
+          <span id="accept-question">Accept Changes?</span>
+          <button id="reject-btn">✗ Reject</button>
           <button id="accept-btn">✓ Accept</button>
         </div>
 
@@ -69,8 +95,8 @@
           </div>
 
           <div id="toggle-test-view-buttons">
-            <button id="toggle-test-view-before" class="toggle-test-view active">Before</button>
-            <button id="toggle-test-view-compare" class="toggle-test-view">Compare</button>
+            <button id="toggle-test-view-before" class="toggle-test-view">Before</button>
+            <button id="toggle-test-view-compare" class="toggle-test-view active">Compare</button>
             <button id="toggle-test-view-after" class="toggle-test-view">After</button>
           </div>
         </div>
@@ -90,6 +116,8 @@
       </div>
     </div>
   </div>
+  <script src="js/Input.js"></script>
+  <script src="js/Helpers.js"></script>
   <script src="js/Explorer.js"></script>
   <script src="js/NavigationHistory.js"></script>
   <script src="js/Sidebar.js"></script>

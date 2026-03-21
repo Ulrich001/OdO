@@ -1,6 +1,11 @@
 class Sidebar {
     constructor() {
         this.sidebar = document.getElementById("sidebar");
+
+        // Kontrolliiert, welche Dateien Preview haben
+        this.imgExtensions = [".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".gif", ".webp", ".apng", ".svg", ".avif"]
+        this.textExtensions = [".txt", ".md", ".py", ".js", ".ts", ".html", ".css", ".json", ".yaml", ".yml", ".toml", ".rs", ".go", ".cpp", ".c", ".h", ".sh", ".xml", ".csv", ".log"]
+
     }
 
     async show() {
@@ -22,14 +27,14 @@ class Sidebar {
             filePreview.innerHTML = "";
             filePreview.style.display = "none";
 
-            if (imgExtensions.includes(activeEntryData.extension)) {
+            if (this.imgExtensions.includes(activeEntryData.extension)) {
                 const img = document.createElement("img");
                 img.id = "file-preview";
                 img.className = "file-preview-img";
                 img.src = await window.pywebview.api.get_image_preview(activeEntryData.path);
                 filePreview.appendChild(img);
                 filePreview.style.display = "block";
-            } else if (textExtensions.includes(activeEntryData.extension)) {
+            } else if (this.textExtensions.includes(activeEntryData.extension)) {
                 const file = document.createElement("file_content");
                 file.id = "file-preview";
                 file.className = "file-preview-text";
@@ -38,6 +43,10 @@ class Sidebar {
                 filePreview.style.display = "block";
             }
         }
+    }
+
+    hide() {
+        this.sidebar.style.display = "none";
     }
     
     addRow(label, id) {

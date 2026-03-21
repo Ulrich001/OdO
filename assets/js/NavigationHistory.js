@@ -32,7 +32,7 @@ class NavigationHistory {
 
     async clear (path) {
         // Setzt alles zurück
-        this.history = [];
+        this.history = [path];
         this.index = 0;
     }
 }

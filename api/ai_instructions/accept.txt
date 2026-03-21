@@ -1,0 +1,3 @@
+The user accepted your script fully. The directory state has been updated accordingly. The following message is a new request — treat it as such, but keep the session context in mind.
+
+

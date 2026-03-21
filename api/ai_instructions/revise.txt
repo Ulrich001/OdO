@@ -1,0 +1,3 @@
+The user has not yet accepted your script. Treat it as unexecuted — do not update your mental model of the directory. The user has added the following information or changes to the pending request. Revise your script accordingly and replace the previous one entirely.
+
+

@@ -1,0 +1,3 @@
+The user rejected the changes made by your script and discarded them. The directory state remains unchanged. The following message may or may not be related to the previous task — interpret it fresh, but keep session context in mind.
+
+

@@ -8,10 +8,6 @@ const WIDTH_EXPAND = 1500;
 let platformOffset = null;
 let scaleFactor = 1.0;
 
-const explorer = new Explorer("/");
-const history = new NavigationHistory("/");
-const sidebar = new Sidebar();
-const test = new Test()
 
 const app             = document.getElementById("app");
 const rightArea       = document.getElementById("right-area");
@@ -31,6 +27,14 @@ const acceptBar       = document.getElementById('accept-bar');
 const acceptBtn       = document.getElementById('accept-btn');
 const settingsPanel   = document.getElementById('settings-panel');
 
+const chatHistory = new ChatHistory();
+const settings = new Settings();
+const explorer = new Explorer("/");
+const history = new NavigationHistory("/");
+const sidebar = new Sidebar();
+const test = new Test();
+const popup = new Popup();
+
 let outputOpen = false;
 let settingsOpen = false;
 
@@ -42,14 +46,6 @@ let activeEntryData = null;
 let api_key = "";
 
 
-// Kontrolliiert, welche Dateien Preview haben
-const imgExtensions = [".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".gif", ".webp", ".apng", ".svg", ".avif"]
-const textExtensions = [".txt", ".md", ".py", ".js", ".ts", ".html", ".css", ".json", ".yaml", ".yml", ".toml", ".rs", ".go", ".cpp", ".c", ".h", ".sh", ".xml", ".csv", ".log"]
-
-
-
-
-// Helpers
 
 // Wird be Start gecalled --> passt Fenstergröße und platfromOffset an
 window.addEventListener('pywebviewready', async () => {
@@ -68,7 +64,8 @@ function resize() {
     } else {
       const inputH = document.getElementById('input-container').scrollHeight;
       const outputH = outputOpen ? document.getElementById('output-box').scrollHeight : 0;
-      h = Math.round((inputH + outputH + platformOffset + 2) / scaleFactor);
+      const settingsH = settings.isOpen ? settingsPanel.scrollHeight : 0;
+      h = Math.round((inputH + outputH + settingsH + platformOffset + 2) / scaleFactor);
     }
     const w = Math.round((explorer.enabled ? WIDTH_EXPAND : WIDTH_SMALL) / scaleFactor);
     window.pywebview.api.resize(w, h);
@@ -91,25 +88,37 @@ chatInput.lineHeight = parseFloat(window.getComputedStyle(chatInput).lineHeight)
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
-function handleInput(input){
-  output("Wird verarbeitet...")
-  window.pywebview.api.send_input(input, explorer.currentDir);
-  baseDir = explorer.currentDir;
+function handleInput(input) {
+    chatHistory.addInput(input);
+    chatHistory.showSpinner();
+    window.pywebview.api.send_input(input, explorer.currentDir);
+    baseDir = explorer.currentDir;
 }
 
 // -- Reset Session
-resetSessionBtn.addEventListener("click", () => {
-  toggleOutput();
+resetSessionBtn.addEventListener("click", async () => {
+    if (!settings.api_key) {return; }
+    window.pywebview.api.new_session();
+    toggleOutput();
+    chatHistory.clear();
 });
 
 // ── send ─────────────────────────────────────────────────────────
 sendBtn.addEventListener('click', () => {
+  settings.hide();
+
   const val = chatInput.value.trim();
-  if (!val || !explorer.currentDir) return;
-  if (test.isTesting) {
-    window.pywebview.api.reject_changes(val);
-    test.end();
+  if (!val) {return;}
+  if (!val || !explorer.currentDir) {
+    popup.error("No Directory selected!")
+    return;}
+  if (!settings.api_key) {
+    popup.error("API Key missing!")
     return;
+  }
+  if (test.isTesting) {
+    window.pywebview.api.revise_changes();
+    test.end();
   }
   handleInput(val);
   toggleOutput(true);
@@ -137,8 +146,11 @@ folderSelect.addEventListener('click', async () => {
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
-function output(output) {
-  outputContent.innerHTML = output.replace(/\n\n/g, '\n');
+function output(msg) {
+  const html = msg.replace(/\n\n/g, '\n');
+  outputContent.innerHTML = html;
+  chatHistory.hideSpinner();
+  chatHistory.addOutput(html);
 }
 
 
@@ -146,7 +158,7 @@ function output(output) {
 function toggleOutput(bool) {
   outputOpen = bool === null ? !outputOpen : bool;
 
-  if (!outputOpen) {
+  if (!outputOpen || explorer.enabled) {
     outputBox.classList.remove('visible');
   } else {
     outputBox.classList.add('visible');
@@ -202,6 +214,11 @@ acceptBtn.addEventListener('click', () => {
   test.end();
 });
 
+document.getElementById("reject-btn").addEventListener("click", () => {
+  window.pywebview.api.reject_changes();
+  test.end();
+});
+
 
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
@@ -211,21 +228,12 @@ acceptBtn.addEventListener('click', () => {
 
 
 settingsBtn.addEventListener('click', () => {
-  settingsPanel.classList.add('visible');
-  settingsOpen = true;
-  resize();
+  settings.show();
 });
 
 // Close Settings
 document.getElementById('settings-close-btn').addEventListener('click', () => {
-  settingsPanel.classList.remove('visible');
-  settingsOpen = false;
-  
-  temp_api = getElementById("settings-api-key").textContent;
-  if (temp_api != "") {
-    api_key = temp_api;
-  }
-  resize();
+  settings.hide();
 });
 
 
@@ -266,19 +274,18 @@ document.getElementById("file-open").addEventListener("click", () => {
 // --- History
 document.getElementById("history-back-btn").addEventListener("click", () => {
   const path = history.back();
-  explorer.load(path);
+  explorer.load(path, add_to_history = false);
 });
 
 document.getElementById("history-up-btn").addEventListener("click", async () => {
-  const blocked = test.isTesting ? explorer.currentDir == test.baseOriginal : explorer.currentDir == "/";
+  const blocked = test.isTesting ? explorer.currentDir == test.baseTemp : explorer.currentDir == "/";
   if (!blocked) {
-    const parent = await window.pywebview.api.get_parent(explorer.currentDir);
-    history.add(parent);
+    const parent = await window.pywebview.api.get_parent(history.current);
     explorer.load(parent);
   }
 });
 
 document.getElementById("history-forward-btn").addEventListener("click", () => {
   const path = history.forward();
-  explorer.load(path);
+  explorer.load(path, add_to_history = false);
 });

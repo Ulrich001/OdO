@@ -34,6 +34,10 @@ class FileChanges:
         new_name = new_path.name
         new_file = self.filelist[pos]
 
+        if len(new_file.new_path) >= 1:
+            new_file.duplicated = True
+            new_file.moved = False
+
         new_file.new_path.append(Path(new_path))
         if new_name != new_file.or_name:
             new_file.renamed = True
@@ -92,8 +96,6 @@ class TestingChanges:
         self.ORIGINAL_DIR = Path(or_dir)
         self.track_files = FileChanges(self.ORIGINAL_DIR)
 
-        self.track_files_count = 0
-
         self.TEMP_DIR = Path(tempfile.gettempdir()) / "odo_temp"
         self.TEMP_DIR.mkdir(exist_ok=True)
 
@@ -117,21 +119,21 @@ class TestingChanges:
                 temp_dir_path = target_dir / dir_name
                 temp_dir_path.mkdir(exist_ok=True)
 
-                # write absolute original path into .odotempdir file
-                (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"{original_dir_path}\n{self.track_files_count}", encoding="utf-8")
-                self.track_files_count += 1
-
                 self.track_files.add_file(original_dir_path, is_dir=True)
+                
+                # write absolute original path into .odotempdir file
+                (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"{original_dir_path}\n{len(self.track_files.filelist) - 1}", encoding="utf-8")
+
 
             for file in files:
                 original_file_path = path / file
                 temp_file_path = target_dir / file
 
-                # write absolute original path into the file
-                temp_file_path.write_text(f"{original_file_path}\n{self.track_files_count}", encoding="utf-8")
-                self.track_files_count += 1
-
                 self.track_files.add_file(original_file_path)
+
+                # write absolute original path into the file
+                temp_file_path.write_text(f"{original_file_path}\n{len(self.track_files.filelist) - 1}", encoding="utf-8")
+
 
         return self.TEMP_DIR
 
@@ -153,10 +155,9 @@ class TestingChanges:
                 if not odotempdir_files:
                     # no .odotempdir means this dir was newly created
                     self.track_files.add_file(temp_dir_path, is_new=True, is_dir=True)
-                    (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"\n{self.track_files_count}", encoding="utf-8")
-                    self.track_files_count += 1
+                    (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"\n{len(self.track_files.filelist) - 1}", encoding="utf-8")
                 else:
-                    with open(odotempdir_files[0]) as dir:
+                    with open(odotempdir_files[0], encoding="utf-8") as dir:
                         original_dir_path = Path(dir.readline().strip())
                         dir_trackfile_count = int(dir.readline().strip())
                     self.track_files.add_new_file_path(dir_trackfile_count, temp_dir_path)
@@ -168,7 +169,7 @@ class TestingChanges:
                     continue
 
                 # read absolute original path from file content
-                with open(temp_file_path) as f:
+                with open(temp_file_path, encoding="utf-8") as f:
                     original_file_path = Path(f.readline().strip())
                     file_trackfile_count = int(f.readline().strip())
 
@@ -187,7 +188,7 @@ class TestingChanges:
             # get original path of this dir from .odotempdir
             odotempdir_files = list(dir_after.glob("*.odotempdir"))
 
-            with open(odotempdir_files[0]) as odo_temp:
+            with open(odotempdir_files[0], encoding="utf-8") as odo_temp:
                 dir_original = odo_temp.readline().strip()
 
             if dir_original == "":
@@ -208,7 +209,7 @@ class TestingChanges:
             if entry.is_dir():
                 sub_odotempdir = list(entry.glob("*.odotempdir"))
 
-                with open(sub_odotempdir[0]) as odo_temp:
+                with open(sub_odotempdir[0], encoding="utf-8") as odo_temp:
                     original_path = odo_temp.readline().strip()
                     filelist_count = int(odo_temp.readline().strip())
 
@@ -225,15 +226,15 @@ class TestingChanges:
 
                     if original_path.parent == dir_original:
                         status = "duplicated" if directory.duplicated else "not_changed"
-                    elif directory.moved:
-                        status = "moved_in"
-                    else:
+                    elif directory.duplicated:
                         status = "copied_in"
+                    else:
+                        status = "moved_in"
 
                     renamed = directory.renamed
 
             else:
-                with open(entry) as f:
+                with open(entry, encoding="utf-8") as f:
                     original_path = f.readline().strip()
                     filelist_count = int(f.readline().strip())
 
@@ -249,10 +250,10 @@ class TestingChanges:
 
                     if original_path.parent == dir_original:
                         status = "duplicated" if file.duplicated else "not_changed"
-                    elif file.moved:
-                        status = "moved_in"
-                    else:
+                    elif file.duplicated:
                         status = "copied_in"
+                    else:
+                        status = "moved_in"
                 
                     renamed = file.renamed
 
@@ -262,7 +263,8 @@ class TestingChanges:
                 "path": str(entry),
                 "original_path": str(original_path) if original_path else None,
                 "status": status,
-                "renamed": renamed
+                "new_name": entry.name if (original_path and entry.name != Path(original_path).name) else None,
+                "renamed": original_path is not None and entry.name != Path(original_path).name
             })
 
         # walk original dir to find deleted/moved away files
@@ -279,7 +281,8 @@ class TestingChanges:
                         "is_dir": file_obj.is_dir,
                         "original_path": str(file_obj.original_path),
                         "status": "deleted" if not file_obj.new_path else "moved_away",
-                        "renamed": file_obj.renamed
+                        "new_name": entry.name if (original_path and entry.name != Path(original_path).name) else None,
+                        "renamed": original_path is not None and entry.name != Path(original_path).name
                     })
 
         return result

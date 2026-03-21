@@ -10,9 +10,14 @@ from api.test_changes import TestingChanges
 
 INSTR_FIRST_CALL = (Path(__file__).parent / "ai_instructions" / "first_call.txt").read_text(encoding="utf-8")
 
-GEMINI_API_KEY = "AIzaSyD69UoimCi0SVojPMDjvGBv1XDXTdSvKWM"
+
+GEMINI_API_KEY = ""
 os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 MODEL = "gemini-3.1-flash-lite-preview"
+
+def get_instruction_from_file(file):
+    instruction = (Path(__file__).parent / "ai_instructions" / f"{file}.txt").read_text(encoding="utf-8")
+    return instruction
 
 
 def get_block_content(text, block_name):
@@ -57,10 +62,14 @@ def get_dir_content(path, max_depth=4):
 
 class AIApi:
     def __init__(self):
-        self.client = genai.Client()
-        self.chat = self.client.chats.create(model=MODEL)
+        if GEMINI_API_KEY and MODEL:
+            self.client = genai.Client()
+            self.new_session()
+        self.info_input = ""
 
-        self.is_new_session = True
+    def new_client(self):
+        self.client = genai.Client()
+        self.new_session()
     
     def new_session(self):
         self.chat = self.client.chats.create(model=MODEL)
@@ -72,20 +81,28 @@ class AIApi:
         self.block_commands = ""
         self.block_output = ""
         self.block_python = ""
-        input = user_input + "USER INPUT:\n"
+        input = "USER INPUT:\n" + user_input
         
         self.path = path
 
         if self.is_new_session:
-            input = INSTR_FIRST_CALL + "\n\n" + input + "\n\nDIRECTORY:\n" + get_dir_content(path)
+            input = get_instruction_from_file("first_call") + input + "\n\nDIRECTORY: " + path + "\n\n" + get_dir_content(path)
             self.is_new_session = False
+        else:
+            input = self.info_input + input
+            self.info_input = ""
 
 
         print(input)
         print("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 
         if not debug_output:
-            response = self.chat.send_message(input)
+            try:
+                response = self.chat.send_message(input)
+            except Exception as e:
+                self.win.evaluate_js(f"popup.error({json.dumps(str(e))})")
+                self.win.evaluate_js(f"chatHistory.hideSpinner({json.dumps(str(e))})")
+                return
             self.output = response.text
             print(response.text)
         else:
@@ -98,8 +115,6 @@ class AIApi:
         if self.block_python != "":
             temp_dir = self.test_script()
             self.win.evaluate_js(f"test.start({json.dumps(str(temp_dir))})")
-
-        self.execute_error = []
 
     def process_output(self):
         self.block_python = get_block_content(self.output, "python")
@@ -129,9 +144,6 @@ class AIApi:
 
         return test_dir
 
-    def reject_changes(self, input):
-        self.send_input(f"The changes made by your script were rejected by the user: {input}", self.path)
-
     def accept_changes(self):
         subprocess.run(
             [sys.executable, str(self.test_script_path)],
@@ -140,6 +152,14 @@ class AIApi:
             cwd=str(self.path),
             encoding="utf-8"
         )
+        self.info_input = get_instruction_from_file("accept")
+    
+    def revise_changes(self):
+        self.info_input = get_instruction_from_file("revise")    
+    
+    def reject_changes(self):
+        self.info_input = get_instruction_from_file("reject")
+
 
     def get_overview_changes(self):
         return self.tester.compare_dirs()
@@ -156,6 +176,14 @@ class AIApi:
             dir_original = f.readline().strip()
         return dir_original
     
+    def set_settings(self, api, model):
+        global GEMINI_API_KEY, MODEL
+        if api:
+            GEMINI_API_KEY = api
+            os.environ["GEMINI_API_KEY"] = api
+        if model:
+            MODEL = model
+        self.new_client()
     
 
 
