@@ -17,7 +17,7 @@ AI File manager
 
 `python -m venv venv`
 
-`.venv\Scripts\activate`
+`.\venv\Scripts\activate`
 
 3. **Dependencies installieren:**
 
