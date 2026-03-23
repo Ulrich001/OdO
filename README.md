@@ -6,44 +6,45 @@ AI File manager
 
 ### Windows
 
-Im gewünschten Ordner:
+1. (Im gewünschten Ordner) **Repository klonen:**
 
-*Repository klonen:*
 `git clone https://github.com/Ulrich001/OdO.git`
 
 `cd OdO`
 
-*Python Venv:*
 
-(Python muss installiert sein)
+2. **Python Venv:** *(Python muss installiert sein)*
+
 `python -m venv venv`
 
-`.\venv\Scripts\activate`
+`.venv\Scripts\activate`
 
-*Dependencies installieren:*
+3. **Dependencies installieren:**
+
 `pip install -r requirements.txt`
 
-*OdO starten:*
+4. **OdO starten:**
 `python main.py`
 
-### Linux
+### Linux (python3)
 
-Im gewünschten Ordner:
+1. (Im gewünschten Ordner) **Repository klonen:**
 
-*Repository klonen:*
 `git clone https://github.com/Ulrich001/OdO.git`
 
 `cd OdO`
 
-*Python Venv:*
+2. **Python Venv:** *(Python muss installiert sein)*
 
-(Python muss installiert sein)
 `python3 -m venv venv`
 
 `source venv\bin\activate`
 
-*Dependencies installieren:*
+
+3. **Dependencies installieren:**
+
 `pip3 install -r requirements.txt`
 
-*OdO starten:*
+4. **OdO starten:**
+
 `python3 main.py`
