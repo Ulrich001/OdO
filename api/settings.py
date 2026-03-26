@@ -2,12 +2,16 @@ import sys
 import ctypes
 
 class SettingsApi:
+
+    # Ändert die Fenstergröße
     def resize(self, width, height):
         self.win.resize(int(width), int(height))
 
+    # Gibt das Betriebssystem zurück
     def get_platform(self):
         return sys.platform
-    
+
+    # Gibt den Skalierungsfaktor des Bildschirms zurück (für hochauflösende Displays)
     def get_scale_factor(self):
         try:
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -17,4 +21,3 @@ class SettingsApi:
             return dpi / 96.0
         except:
             return 1.0
-    

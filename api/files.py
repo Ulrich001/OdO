@@ -5,18 +5,16 @@ import webview
 from api.utils import calc_size
 
 class FilesApi:
-    def list_dir(self, path):
-        #TODO: handle permission errors
-        path = Path(path)
 
+    # Gibt alle Dateien und Ordner in einem Verzeichnis zurück
+    def list_dir(self, path):
+        #TODO: permission errors handhaben
+        path = Path(path)
         entries = []
-        
         for entry in path.iterdir():
             if entry.suffix == ".odotempdir":
                 continue
-
             properties = entry.stat()
-
             entries.append({
                 "name": entry.name,
                 "path": str(entry),
@@ -25,12 +23,11 @@ class FilesApi:
                 "modified": properties.st_mtime,
                 "extension": Path(entry.name).suffix.lower()
             })
-
         # Sortieren aller Dateien, sodass Ordner zuerst gelistet werden
         entries.sort(key=lambda i: (not i["is_dir"], i["name"].lower()))
-
         return entries
-    
+
+    # Öffnet Ordner-Auswahl
     def select_directory(self, directory=None):
         result = self.win.create_file_dialog(
             webview.FileDialog.FOLDER, directory=directory or self.path or "", allow_multiple=True
@@ -39,13 +36,14 @@ class FilesApi:
             path = result[0]
             return path
         return None
-    
+
+    # Gibt den Parent-Ordner eines Pfades zurück
     def get_parent(self, path):
         return str(Path(path).parent)
 
+    # Gibt ein Bild als Base64-String zurück (für die Vorschau)
     def get_image_preview(self, path):
         import base64
-
         with open(path, "rb") as f:
             data = base64.b64encode(f.read()).decode()
         ext = Path(path).suffix.lower().strip(".")
@@ -60,22 +58,21 @@ class FilesApi:
             "avif": "image/avif",
         }.get(ext, f"image/{ext}")
         return f"data:{mime};base64,{data}"
-    
+
     def path_exists(path):
         path = Path(path)
+        return path.exists()
 
-        return path.exists
-
-
+    # Gibt den Textinhalt einer Datei zurück
     def get_file_content(self, path):
         file = Path(path)
-
         return file.read_text(encoding='utf-8') if file.exists else "File could not be accessed"
-    
+
+    # Öffnet eine Datei mit dem Standardprogramm des Betriebssystems
     def open_default_app(self, filepath):
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', filepath))
         elif platform.system() == 'Windows':    # Windows
             os.startfile(filepath)
-        else:                                   # linux variants
+        else:                                   # Linux
             subprocess.call(('xdg-open', filepath))

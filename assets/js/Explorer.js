@@ -2,13 +2,11 @@ class Explorer {
     constructor(dir) {
         this.currentDir = dir ?? null;
         this.enabled = false;
-
-        this.fileList = document.getElementById("file-list");
-
         this.folderPathInput = document.getElementById("folder-path");
         this.folderPathExplorer = document.getElementById("current-path");
     }
 
+    // Explorer öffnen oder schließen
     toggle() {
         if (this.enabled) {
             this.close()
@@ -17,28 +15,26 @@ class Explorer {
         }
     }
 
+    // Ordner-Auswahl-Dialog öffnen
     async openSelector() {
         if (test.isTesting) {return; }
         // Wenn currentDir == null => currentDir auf "/" setzen
         this.currentDir ??= "/";
-
         const result = await window.pywebview.api.select_directory(this.currentDir);
         if (!result) return;
         this.currentDir = result;
         this.load();
     }
 
+    // Explorer einblenden und Dateien laden
     open() {
         this.enabled = true;
-
         outputBox.classList.remove('visible');
         document.getElementById("chat-history").classList.add("visible");
         rightArea.classList.add('open');
         sideSeparator.classList.add('visible');
         app.style.height = "100vh";
-
         expandBtnIcon.src = "icons/shrink.svg";
-
         if (test.isTesting) {
             explorer.load(test.baseTemp);
         } else {
@@ -48,12 +44,11 @@ class Explorer {
         resize();
     }
 
+    // Explorer ausblenden
     close() {
         // Skip, wenn bereits geschlossen
         if (!this.enabled) {return;}
-
         this.enabled = false;
-
         outputBox.classList.add('visible');
         document.getElementById("chat-history").classList.remove("visible");
         if (!outputOpen) {outputBox.classList.remove("visible");}
@@ -62,24 +57,20 @@ class Explorer {
         fileList.innerHTML = "";
         sidebar.innerHTML = "";
         app.style.height = "auto";
-
         expandBtnIcon.src = "icons/expand.svg";
-
         resize();
     }
 
+    // Lädt den Inhalt eines Ordners in die Dateiliste
     async load(dir, add_to_history = true) {
         dir ??= this.currentDir;
         
         if (add_to_history) {history.add(dir)};
         this.folderPathInput.innerHTML = dir;
         this.folderPathExplorer.innerHTML = dir;
-
         if (!this.enabled) {return;}
-
         // file-list leeren, bevor neue Elemente hinzugefügt werden
         fileList.innerHTML = '';
-
         // Liste mit allen Dateien erhalten
         let entries;
         if (test.isTesting && test.mode === "compare") {
@@ -87,15 +78,16 @@ class Explorer {
         } else {
             entries = await window.pywebview.api.list_dir(dir);
         }
-
         // Iteriert über jedes entry
         entries.forEach(entry => this.addEntry(entry));
+
+        this.currentDir = dir;
     }
 
+    // Erstellt ein div-Element für eine Datei oder einen Ordner und fügt es zur Liste hinzu
     addEntry(entry) {
         // div erstellen
         const div = document.createElement("div");
-
         if (test.isTesting && test.mode === "compare") {
             div.className = `file-entry status-${entry.status}`;            
             const displayName = entry.renamed ? `[Umbenannt] ${entry.name}` : entry.name;
@@ -112,9 +104,7 @@ class Explorer {
             <span class="name">${entry.name}</span>
             `;            
         }
-
         div.entryData = entry;
-
         // Informationen in Sidebar anzeigen
         div.addEventListener("click", () => {
             setActive(div, entry);
@@ -126,7 +116,6 @@ class Explorer {
                 this.load(entry.path);
             });
         }
-
-        this.fileList.appendChild(div);
+        fileList.appendChild(div);
     }
 }

@@ -8,11 +8,13 @@
 <body>
   <div id="app">
     <div id="left-area">
-      
+
+      <!-- Ausgabe der KI (kleine Ansicht) -->
       <div id="output-box">
         <div id="output-content"></div>
       </div>
-      
+
+      <!-- Chat-Verlauf (große Ansicht) -->
       <div id="chat-history">
         <div id="output-header">
           <h4>OdO</h4>
@@ -24,12 +26,14 @@
         </div>
       </div>
 
+      <!-- Einstellungen -->
       <div id="settings-panel">
         <div id="settings-header">
           <span>Settings</span>
           <button id="settings-close-btn">✕</button>
         </div>
         <div id="settings-body">
+          <!-- API Key Eingabe -->
           <div class="settings-row">
             <label>API Key</label>
             <div class="api-key-wrapper">
@@ -40,6 +44,7 @@
                 <input type="password" id="settings-api-key" placeholder="Gemini API Key"/>
             </div>
         </div>
+          <!-- Modell-Auswahl -->
           <div class="settings-row">
               <label>Model</label>
               <div class="model-select" id="model-select">
@@ -56,13 +61,17 @@
       </div>
       </div>
 
+      <!-- Eingabebereich -->
       <div id="input-container">
+
+        <!-- Accept/Reject Leiste (nur im Test-Modus sichtbar) -->
         <div id="accept-bar">
           <span id="accept-question">Accept Changes?</span>
           <button id="reject-btn">✗ Reject</button>
           <button id="accept-btn">✓ Accept</button>
         </div>
 
+        <!-- Obere Leiste: Ordner, Einstellungen, Explorer -->
         <div id="top-bar">
           <div id="folder-select">
             <span id="folder-icon"><img src="icons/Folder.svg" alt="📁"></span>
@@ -72,6 +81,7 @@
           <button id="expand-btn"><img id="expand-btn-icon" src="icons/expand.svg" width=20 height=20 alt="⌞ ⌝"></button>
         </div>
 
+        <!-- Texteingabe -->
         <div id="input-bar">
           <textarea id="chat-input" rows="1" placeholder="Ask OdO..."></textarea>
           <button id="send-btn"><img src="icons/ArrowUp.svg" alt="↑"></button>
@@ -81,9 +91,11 @@
 
     <div id="side-separator"></div>
 
+    <!-- Rechte Seite: Explorer + Sidebar -->
     <div id="right-area">
       <div id="explorer">
 
+        <!-- Navigationsleiste -->
         <div id="nav-bar">
           <div id="nav-row-1">
             <div id="navigation-buttons">
@@ -94,6 +106,7 @@
             <span id="current-path">/</span>
           </div>
 
+          <!-- Before/Compare/After Umschalter (nur im Test-Modus) -->
           <div id="toggle-test-view-buttons">
             <button id="toggle-test-view-before" class="toggle-test-view">Before</button>
             <button id="toggle-test-view-compare" class="toggle-test-view active">Compare</button>
@@ -101,21 +114,24 @@
           </div>
         </div>
 
+        <!-- Dateiliste -->
         <div id="file-list"></div>
       </div>
 
       <div id="explorer-separator"></div>
 
+      <!-- Datei-Details -->
       <div id="sidebar">
         <h3 id="sb-header">Details</h3>
         <p id="sb-name">filename.txt</p>
         <table id="sb-table"></table>
         <div id="file-preview"></div>
-
         <button id="file-open">Open in default App</button>
       </div>
     </div>
   </div>
+
+  <!-- Scripts -->
   <script src="js/Input.js"></script>
   <script src="js/Helpers.js"></script>
   <script src="js/Explorer.js"></script>

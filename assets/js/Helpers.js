@@ -3,9 +3,8 @@ class Settings {
         this.api_key = null;
         this.model = "gemini-3.1-flash-lite-preview";
         this.isOpen = false;
-
         this.inputApi = document.getElementById("settings-api-key");
-
+        // Modell-Auswahl per Klick
         document.querySelectorAll(".model-option").forEach(opt => {
             opt.addEventListener("click", () => {
                 document.querySelectorAll(".model-option").forEach(o => o.classList.remove("selected"));
@@ -15,12 +14,14 @@ class Settings {
         });
     }
 
+    // Einstellungen öffnen
     show() {
         settingsPanel.classList.add('visible');
         this.isOpen = true;
         resize();
     }
 
+    // Einstellungen schließen und speichern
     hide() {
         if (!this.isOpen) {return; }
         settingsPanel.classList.remove('visible');
@@ -36,12 +37,12 @@ class Settings {
         }
         window.pywebview.api.set_settings(this.api_key, this.model);
         resize();
+    }
 }
-}
-
 
 class Popup {
     constructor() {
+        // Popup-Element erstellen und ans DOM anhängen
         this.popupDiv = document.createElement("div");
         this.popupDiv.id = "popup";
         this.popupDiv.innerHTML = `
@@ -51,6 +52,8 @@ class Popup {
         document.body.appendChild(this.popupDiv);
         document.getElementById("popup-close-btn").addEventListener("click", () => this.hide());
     }
+
+    // Fehlermeldung anzeigen (rot)
     error(message) {
         this.popupDiv.classList.remove("error");
         void this.popupDiv.offsetWidth;
@@ -58,11 +61,15 @@ class Popup {
         document.getElementById("popup-message").textContent = message;
         this.popupDiv.classList.add("visible");
     }
+
+    // Hinweis anzeigen (grau)
     info(message) {
         this.popupDiv.classList.remove("error");
         document.getElementById("popup-message").textContent = message;
         this.popupDiv.classList.add("visible");
     }
+
+    // Popup schließen
     hide() {
         this.popupDiv.classList.remove("visible");
     }

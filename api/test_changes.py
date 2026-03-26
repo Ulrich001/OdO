@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 import tempfile
 
+# Repräsentiert eine einzelne Datei oder einen Ordner mit allen Änderungsinformationen
 class File:
     def __init__(self, org_path, is_dir, is_new=False):
         self.is_dir = is_dir
@@ -19,21 +20,23 @@ class File:
         self.original_path = Path(org_path)
         self.new_path = []
 
+# Verwaltet die Liste aller Dateien und ihre Änderungen
 class FileChanges:
     def __init__(self, root):
         self.filelist = []
         self.root_dir = Path(root)
     
     def add_file(self, path, is_new=False, is_dir=False):
-        """Adds a new file to filelist"""
+        """Fügt eine neue Datei zur Dateiliste hinzu"""
         self.filelist.append(File(path, is_dir, is_new))
     
     def add_new_file_path(self, pos, new_path):
-        """Adds a new path to an existing file entry"""
+        """Fügt einen neuen Pfad zu einem bestehenden Dateieintrag hinzu"""
         new_path = Path(new_path)
         new_name = new_path.name
         new_file = self.filelist[pos]
 
+        # Wenn bereits ein neuer Pfad existiert, wurde die Datei dupliziert
         if len(new_file.new_path) >= 1:
             new_file.duplicated = True
             new_file.moved = False
@@ -47,13 +50,14 @@ class FileChanges:
         new_file.not_changed = (Path(new_path) == new_file.original_path)
 
     def file_in_filelist(self, path):
-        """Returns index of file in filelist, or -1 if not found"""
+        """Gibt den Index einer Datei in der Liste zurück, oder -1 wenn nicht gefunden"""
         path = Path(path)
         for i, file in enumerate(self.filelist):
             if file.original_path == path:
                 return i
         return -1
 
+    # Zählt alle Änderungen und gibt eine Zusammenfassung zurück
     def track_final_changes(self):
         total_files = 0
         files_deleted = 0
@@ -99,18 +103,19 @@ class TestingChanges:
         self.TEMP_DIR = Path(tempfile.gettempdir()) / "odo_temp"
         self.TEMP_DIR.mkdir(exist_ok=True)
 
+        # Temp-Ordner leeren, falls noch alte Dateien drin sind
         if len(os.listdir(self.TEMP_DIR)) != 0:
             self.clean_dir()
 
     def create_clone_dir(self) -> Path:
-        """Creates a clone of ORIGINAL_DIR in TEMP_DIR.
-        Each file contains its own absolute original path.
-        Each directory contains a .odotempdir file with its absolute original path."""
+        """Erstellt eine Kopie des Originalordners im Temp-Verzeichnis.
+        Jede Datei enthält ihren absoluten Originalpfad.
+        Jeder Ordner enthält eine .odotempdir Datei mit seinem absoluten Originalpfad."""
 
         for path, dirs, files in os.walk(self.ORIGINAL_DIR):
             path = Path(path)
 
-            # calculate the equivalent directory in TEMP_DIR
+            # Äquivalenten Pfad im Temp-Verzeichnis berechnen
             rel = path.relative_to(self.ORIGINAL_DIR)
             target_dir = self.TEMP_DIR / rel
 
@@ -121,9 +126,8 @@ class TestingChanges:
 
                 self.track_files.add_file(original_dir_path, is_dir=True)
                 
-                # write absolute original path into .odotempdir file
+                # Originalpfad und Index in .odotempdir Datei speichern
                 (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"{original_dir_path}\n{len(self.track_files.filelist) - 1}", encoding="utf-8")
-
 
             for file in files:
                 original_file_path = path / file
@@ -131,15 +135,14 @@ class TestingChanges:
 
                 self.track_files.add_file(original_file_path)
 
-                # write absolute original path into the file
+                # Originalpfad und Index in die Datei schreiben
                 temp_file_path.write_text(f"{original_file_path}\n{len(self.track_files.filelist) - 1}", encoding="utf-8")
-
 
         return self.TEMP_DIR
 
     def compare_dirs(self):
-        """Walks TEMP_DIR and matches each file/dir back to its original.
-        Returns a summary string of all changes."""
+        """Durchsucht den Temp-Ordner und gleicht jede Datei mit dem Original ab.
+        Gibt eine Zusammenfassung aller Änderungen zurück."""
         print(f"compare_dirs called, TEMP_DIR: {self.TEMP_DIR}")
         print(f"contents: {list(self.TEMP_DIR.iterdir())}")
 
@@ -149,11 +152,11 @@ class TestingChanges:
             for dir_name in dirs:
                 temp_dir_path = path / dir_name
 
-                # find .odotempdir to get original path
+                # .odotempdir suchen, um den Originalpfad zu finden
                 odotempdir_files = list(temp_dir_path.glob("*.odotempdir"))
 
                 if not odotempdir_files:
-                    # no .odotempdir means this dir was newly created
+                    # Kein .odotempdir bedeutet: Ordner wurde neu erstellt
                     self.track_files.add_file(temp_dir_path, is_new=True, is_dir=True)
                     (temp_dir_path / f"{dir_name}.odotempdir").write_text(f"\n{len(self.track_files.filelist) - 1}", encoding="utf-8")
                 else:
@@ -168,24 +171,25 @@ class TestingChanges:
                 if temp_file_path.suffix == ".odotempdir":
                     continue
 
-                # read absolute original path from file content
+                # Originalpfad aus dem Dateiinhalt lesen
                 with open(temp_file_path, encoding="utf-8") as f:
                     original_file_path = Path(f.readline().strip())
                     file_trackfile_count = int(f.readline().strip())
 
                 if not original_file_path.parts:
-                    # empty content means newly created file
+                    # Leerer Inhalt bedeutet: Datei wurde neu erstellt
                     self.track_files.add_file(temp_file_path, is_new=True)
                 else:
                     self.track_files.add_new_file_path(file_trackfile_count, temp_file_path)
 
         return self.track_files.track_final_changes()
     
+    # Gibt alle Änderungen in einem bestimmten Ordner zurück
     def changes_in_dir(self, dir_after):
         dir_after = Path(dir_after)
 
         if dir_after != self.TEMP_DIR:
-            # get original path of this dir from .odotempdir
+            # Originalpfad dieses Ordners aus .odotempdir lesen
             odotempdir_files = list(dir_after.glob("*.odotempdir"))
 
             with open(odotempdir_files[0], encoding="utf-8") as odo_temp:
@@ -220,7 +224,6 @@ class TestingChanges:
                     renamed = False
                     original_path = None
                 else:
-
                     original_path = Path(original_path)
                     seen.add(original_path)
 
@@ -267,7 +270,7 @@ class TestingChanges:
                 "renamed": original_path is not None and entry.name != Path(original_path).name
             })
 
-        # walk original dir to find deleted/moved away files
+        # Originalpfad nach gelöschten oder verschobenen Dateien durchsuchen
         if dir_original and dir_original.exists():
             for entry in dir_original.iterdir():
                 if entry not in seen:
@@ -284,11 +287,13 @@ class TestingChanges:
                         "new_name": entry.name if (original_path and entry.name != Path(original_path).name) else None,
                         "renamed": original_path is not None and entry.name != Path(original_path).name
                     })
+                    
+        result.sort(key=lambda i: (not i["is_dir"], i["name"].lower()))
 
         return result
 
     def clean_dir(self):
-        """Deletes and recreates TEMP_DIR"""
+        """Löscht und erstellt den Temp-Ordner neu"""
         if self.TEMP_DIR.exists():
             shutil.rmtree(self.TEMP_DIR)
             self.TEMP_DIR.mkdir(exist_ok=True)

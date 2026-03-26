@@ -8,7 +8,7 @@ const WIDTH_EXPAND = 1500;
 let platformOffset = null;
 let scaleFactor = 1.0;
 
-
+// UI-Elemente
 const app             = document.getElementById("app");
 const rightArea       = document.getElementById("right-area");
 const sideSeparator   = document.getElementById("side-separator");
@@ -22,11 +22,10 @@ const expandBtn       = document.getElementById("expand-btn");
 const expandBtnIcon   = document.getElementById("expand-btn-icon");
 const resetSessionBtn = document.getElementById("reset-session-btn");
 const fileList        = document.getElementById("file-list");
-const folderPath      = document.getElementById("folder-path");
-const acceptBar       = document.getElementById('accept-bar');
 const acceptBtn       = document.getElementById('accept-btn');
 const settingsPanel   = document.getElementById('settings-panel');
 
+// Klassen initialisieren
 const chatHistory = new ChatHistory();
 const settings = new Settings();
 const explorer = new Explorer("/");
@@ -47,7 +46,7 @@ let api_key = "";
 
 
 
-// Wird be Start gecalled --> passt Fenstergröße und platfromOffset an
+// Wird bei Start gecalled --> passt Fenstergröße und platfromOffset an
 window.addEventListener('pywebviewready', async () => {
   const platform = await window.pywebview.api.get_platform();
   scaleFactor = await window.pywebview.api.get_scale_factor();
@@ -72,7 +71,7 @@ function resize() {
   });
 }
 
-//
+// Textarea wächst mit Inhalt
 chatInput.addEventListener('input', () => {
   chatInput.style.height = 'auto';
   chatInput.style.height = Math.min(chatInput.scrollHeight, chatInput.lineHeight * 5) + 'px';
@@ -88,6 +87,7 @@ chatInput.lineHeight = parseFloat(window.getComputedStyle(chatInput).lineHeight)
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
+// Sendet Eingabe an Ai
 function handleInput(input) {
     chatHistory.addInput(input);
     chatHistory.showSpinner();
@@ -95,7 +95,7 @@ function handleInput(input) {
     baseDir = explorer.currentDir;
 }
 
-// -- Reset Session
+// Neuer Chat (Reset Session)
 resetSessionBtn.addEventListener("click", async () => {
     if (!settings.api_key) {return; }
     window.pywebview.api.new_session();
@@ -104,14 +104,18 @@ resetSessionBtn.addEventListener("click", async () => {
 });
 
 // ── send ─────────────────────────────────────────────────────────
+// Sendet Nachricht
 sendBtn.addEventListener('click', () => {
   settings.hide();
 
   const val = chatInput.value.trim();
+  // Kein Input => return
   if (!val) {return;}
-  if (!val || !explorer.currentDir) {
+  // Kein Dir ausgewählt => return
+  if (!explorer.currentDir) {
     popup.error("No Directory selected!")
     return;}
+  // Kein API Key => return
   if (!settings.api_key) {
     popup.error("API Key missing!")
     return;
@@ -126,6 +130,7 @@ sendBtn.addEventListener('click', () => {
   chatInput.style.height = 'auto';
 });
 
+// Strg+Enter zum Senden
 chatInput.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'Enter') {
     e.preventDefault();
@@ -133,7 +138,7 @@ chatInput.addEventListener('keydown', e => {
   }
 });
 
-// ── folder select ─────────────────────────────────────────────────
+// Öffnet Ordner-Auswahl
 folderSelect.addEventListener('click', async () => {
   explorer.openSelector();
 });
@@ -146,6 +151,7 @@ folderSelect.addEventListener('click', async () => {
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
+// Zeigt die KI-Antwort an
 function output(msg) {
   const html = msg.replace(/\n\n/g, '\n');
   outputContent.innerHTML = html;
@@ -153,8 +159,7 @@ function output(msg) {
   chatHistory.addOutput(html);
 }
 
-
-// ── toggle output panel ──────────────────────────────────────────
+// Zeigt/versteckt die Output-Box
 function toggleOutput(bool) {
   outputOpen = bool === null ? !outputOpen : bool;
 
@@ -168,30 +173,13 @@ function toggleOutput(bool) {
 }
 
 
-// Output styling
-document.addEventListener('click', async e => {
-  if (e.target.classList.contains('file-ref')) {
-    const fullPath = baseDir + "/" + e.target.title;
-    const dir = await window.pywebview.api.get_parent(fullPath);
-
-    history.add(dir);
-    await explorer.load(dir);
-
-    const entry = entryFromFilepath(fullPath);
-    if (entry) {
-      setActive(entry, entry.entryData);
-      sidebar.show();
-    }
-  }
-});
-
-
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 // Test
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
+// Wechselt zwischen Before/Compare/After Ansicht
 document.querySelectorAll('.toggle-test-view').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.toggle-test-view').forEach(b => b.classList.remove('active'));
@@ -207,13 +195,13 @@ document.querySelectorAll('.toggle-test-view').forEach(btn => {
   });
 });
 
-
-// Accept/Reject
+// Änderungen akzeptieren
 acceptBtn.addEventListener('click', () => {
   window.pywebview.api.accept_changes();
   test.end();
 });
 
+// Änderungen ablehnen
 document.getElementById("reject-btn").addEventListener("click", () => {
   window.pywebview.api.reject_changes();
   test.end();
@@ -226,12 +214,12 @@ document.getElementById("reject-btn").addEventListener("click", () => {
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
-
+// Einstellungen öffnen
 settingsBtn.addEventListener('click', () => {
   settings.show();
 });
 
-// Close Settings
+// Einstellungen schließen
 document.getElementById('settings-close-btn').addEventListener('click', () => {
   settings.hide();
 });
@@ -243,12 +231,12 @@ document.getElementById('settings-close-btn').addEventListener('click', () => {
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
-// ── expand window ─────────────────────────────────────────────────
+// Explorer ein-/ausblenden
 expandBtn.addEventListener("click", () => {
   explorer.toggle();
 });
 
-// Get entry from filepath
+// Sucht ein Element in der angezeigten Dateiliste anhand des Pfades
 function entryFromFilepath(path) {
   for (const entry of fileList.querySelectorAll('div')) {
     if (entry.dataset.path == path) {
@@ -258,7 +246,7 @@ function entryFromFilepath(path) {
   return null;
 }
 
-// Highlight für ausgewählte Datei
+// Markiert eine Datei als ausgewählt
 function setActive(div, entry) {
   if (activeEntry) activeEntry.classList.remove("selected");
   activeEntry = div;
@@ -266,17 +254,20 @@ function setActive(div, entry) {
   activeEntryData = entry;
 }
 
+// Öffnet die Datei mit dem Standardprogramm
 document.getElementById("file-open").addEventListener("click", () => {
   window.pywebview.api.open_default_app(activeEntryData.path);
 })
 
 
 // --- History
+// Einen Schritt zurück
 document.getElementById("history-back-btn").addEventListener("click", () => {
   const path = history.back();
   explorer.load(path, add_to_history = false);
 });
 
+// Einen Ordner nach oben
 document.getElementById("history-up-btn").addEventListener("click", async () => {
   const blocked = test.isTesting ? explorer.currentDir == test.baseTemp : explorer.currentDir == "/";
   if (!blocked) {
@@ -285,6 +276,7 @@ document.getElementById("history-up-btn").addEventListener("click", async () => 
   }
 });
 
+// Einen Schritt vorwärts
 document.getElementById("history-forward-btn").addEventListener("click", () => {
   const path = history.forward();
   explorer.load(path, add_to_history = false);
